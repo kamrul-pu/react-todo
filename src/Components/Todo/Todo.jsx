@@ -1,11 +1,29 @@
 import React from "react";
 import AddTodo from "./AddTodo";
 import Plan from "./Plan";
+import axios from "axios";
 
 class Todo extends React.Component {
     state = {
         items: [],
         text: "",
+    }
+
+    showPlan = () => {
+        //Using Fetch
+        // fetch("http://127.0.0.1:8000/api/")
+        //     .then(res => res.json())
+        //     .then(data => this.setState({ items: data }))
+        //     .catch(err => console.log(err));
+
+        //Using Axios
+        axios.get("http://127.0.0.1:8000/api/")
+            .then(res => this.setState({ items: res.data }))
+            .catch(err => console.log(err));
+    }
+
+    componentDidMount() {
+        this.showPlan();
     }
 
     handleChangeFn = val => {
@@ -14,8 +32,20 @@ class Todo extends React.Component {
 
     handleAddFn = () => {
         if (this.state.text !== "") {
+            const data = { 'items': this.state.text };
+            console.log(data);
+            fetch("http://127.0.0.1:8000/api/create/", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+                .then(res => console.log(res))
+                .catch(err => console.log(err));
             const items = [...this.state.items, this.state.text];
             this.setState({ items: items, text: "" });
+            this.showPlan();
         }
     }
 
@@ -31,19 +61,28 @@ class Todo extends React.Component {
 
     handleDelete = id => {
 
+        fetch("http://127.0.0.1:8000/api/delete/" + id, {
+            method: 'DELETE',
+        })
+            .then(res => console.log(res));
+
         console.log("Deleted", id);
         const oldItems = [...this.state.items];
         // console.log('oldItems', oldItems)
         const items = oldItems.filter((element, i) => {
-            return i !== id
+            console.log(element);
+            console.log('e id', element.id, 'p id', id);
+            return i != id
         });
-        // console.log("new Items", items);
+        console.log("new Items", items);
         this.setState({ items: items });
+        this.showPlan();
     }
 
     render() {
         const items = this.state.items.map((plan, i) => {
-            return <Plan item={plan} id={i} sendData={this.handleDelete} key={Math.random()} />
+            // console.log('plan', plan)
+            return <Plan item={plan.items} id={plan.id} sendData={this.handleDelete} key={Math.random()} />
         })
         return (
             <div className="container">
